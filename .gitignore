@@ -1,3 +1,6 @@
 __pycache__
 .idea
 example.json
+\target
+\snapshots
+.jeff

@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+  global-entry-app:
+    build: .
+    image: global-entry-app:latest
+    container_name: global-entry-app
+    volumes:
+      - ./.jeff:/app/.jeff:ro
+    environment:
+      - RUST_LOG=info
+    restart: unless-stopped
