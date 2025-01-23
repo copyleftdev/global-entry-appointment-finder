@@ -1,29 +1,40 @@
 # Global Entry Appointment Finder
 
+![Rust 1.84](https://img.shields.io/badge/Rust-1.84.0-blue?logo=rust)
+![Docker](https://img.shields.io/badge/Container-Docker-blue?logo=docker)
+![Docker Compose](https://img.shields.io/badge/Docker%20Compose-1.29+-blue?logo=docker)
+![Slack Integration](https://img.shields.io/badge/Slack-Integration-green?logo=slack)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 This tool queries the TTP CBP system for Global Entry interview appointments within a specified date range, filters them by state, and then **exports the data** in CSV by default or **posts summaries to Slack** if enabled in `.jeff`. It can run once or repeatedly at a defined interval, preserving the full JSON data of each location if desired.
+
+---
 
 ## Features
 
-- Fetches appointments for multiple dates in **parallel**.
-- Configurable **states**, date range, concurrency, and retry logic via a `.jeff` file.
-- **Rate-limits** requests to avoid hammering the API.
-- **Default CSV output** includes:
-  - Date of the appointment search
-  - Basic location data (ID, name, phone, etc.)
-  - **Full raw JSON** of each location object for complete details.
-- Optional **Slack integration** (via `enable_slack` in `.jeff`):
-  - Posts a message summarizing appointment locations.
-- **One-shot** or **continuous** operation based on `fetch_interval_minutes`.
+- **Parallel fetching** for multiple dates
+- **Configurable** states, date range, concurrency, retry logic via `.jeff`
+- **Rate-limiting** to avoid API overload
+- **CSV export** (default) with:
+  - Search date
+  - Location data (ID, name, phone, etc.)
+  - Full raw JSON of the returned object
+- **Slack integration** (set `enable_slack = true` in `.jeff`)
+- One-shot or continuous operation based on `fetch_interval_minutes` (looping vs. single run)
+
+---
 
 ## Requirements
 
-- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/).
-- **Optional** Slack credentials (token and channel ID) if `enable_slack` is `true`.
-- A `.jeff` file at the project root (see example below).
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/)
+- **Optional** Slack credentials if you want Slack output
+- A `.jeff` config file at the project root
+
+---
 
 ## Configuration
 
-Create a `.jeff` file at the project root. For example:
+Create a `.jeff` file in your project root. Example:
 
 ```json
 {
@@ -48,52 +59,50 @@ Create a `.jeff` file at the project root. For example:
 }
 ```
 
-### Fields
+### Key Fields
 
-- **`enable_slack`**: `false` uses CSV output; `true` sends a Slack message instead.  
-- **`slack_token`** & **`slack_channel_id`**: Used only if `enable_slack` is true.  
-- **`fetch_interval_minutes`**: If `0`, run once; otherwise loop indefinitely, sleeping for this many minutes.  
-- **`search_states`**: List of 2-letter state codes to include.  
-- **`date_range`**: A start/end (`YYYY-MM-DD`) for which days to fetch.  
-- **`api_rate_limit_seconds`**: Delay between each date fetch to avoid hitting rate limits.  
-- **`max_concurrent_fetches`**: Max parallel requests.  
-- **`max_retries`**: Retries per date on network errors or non-200 responses.
+- **`enable_slack`**  
+  - `true` → Post to Slack  
+  - `false` → Write `appointments.csv`  
+- **`fetch_interval_minutes`**  
+  - `0` → Run once and exit  
+  - `> 0` → Repeatedly fetch every N minutes  
+- **`search_states`**: 2-letter codes for states you want to filter  
+- **`date_range`**: Start/end in `YYYY-MM-DD`  
+- **`api_rate_limit_seconds`**: Delay between requests  
+- **`max_concurrent_fetches`** and **`max_retries`**
+
+---
 
 ## Usage
 
-1. **Build and run**:
+1. **Build & Run**  
    ```bash
    make build
    make run
    ```
-2. **Logs**:
+2. **Logs**  
    ```bash
    make logs
    ```
-3. **Stop**:
+3. **Stop**  
    ```bash
    make stop
    ```
 
-### Default CSV Output
+When `enable_slack = false`, a CSV file (`appointments.csv`) is generated, showing **Date, ID, Name, State, City, Address, PostalCode, Phone, RawJSON**. This captures **all** details returned by the TTP API.
 
-When `enable_slack = false`, the tool writes `appointments.csv` with columns like:
+With `enable_slack = true`, it will post a **Slack message** summarizing the first few locations, rather than exporting CSV.
 
-- **Date** (the date queried)  
-- **ID, Name, State, City, Address, PostalCode, Phone**  
-- **RawJSON** (entire source object from the TTP API)
-
-This captures **all** details from each location returned.
-
-### Slack Integration
-
-If `enable_slack = true`, the application instead posts a summary to the specified Slack channel, showing a subset of fields for the first few locations. The CSV output step is skipped.
+---
 
 ## Docker Compose Workflow
 
-- **Multi-stage build** for a smaller final image.
-- Mounts `.jeff` read-only, so local edits reflect inside the container.
-- The container restarts unless stopped, continuing to fetch at your interval (`fetch_interval_minutes`) if > 0.
+- **Multi-stage build** for smaller final images  
+- Mounts `.jeff` read-only so local changes appear in-container  
+- **Restart** unless stopped to keep going if `fetch_interval_minutes > 0`
+
+---
 
 ## Mermaid Flow
 
@@ -109,7 +118,7 @@ flowchart TB
     G --> H[Filter by States]
     H --> I[Convert to CSV Rows / Slack Data]
     I --> J{enable_slack?}
-    J -- "No" --> K[Write to CSV: includes full JSON]
+    J -- "No" --> K[Write to CSV (includes raw JSON)]
     J -- "Yes" --> L[Post Slack Summary]
     K --> M[End or Sleep]
     L --> M[End or Sleep]
@@ -118,11 +127,9 @@ flowchart TB
     M -- "Once" --> O[Stop]
 ```
 
-- **A → B → C → D**: App reads `.jeff` and sets up HTTP/Slack.  
-- **D → E or F**: If `0`, run once; otherwise loop.  
-- **G → H**: For each date, fetch TTP data, filter states.  
-- **H → I**: Convert results to CSV rows or Slack messages.  
-- **J**: If Slack is enabled, post Slack; otherwise export CSV with full JSON data.  
-- **M**: End if one-shot, or **N** if looping.  
-
-You now have **full control** over whether you capture the **entire source JSON** in CSV or post a **Slack** message with essential details— **all configurable** via `.jeff`.
+- **A→B→C→D**: Reads config, sets up HTTP/Slack.  
+- **E/F**: Single run vs loop.  
+- **G→H**: Fetch & filter.  
+- **H→I**: Prepare CSV or Slack.  
+- **J** → Slack or CSV.  
+- **M** → End or sleep for the next cycle.  
