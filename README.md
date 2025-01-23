@@ -12,9 +12,9 @@ This tool queries the TTP CBP system for Global Entry interview appointments wit
 
 ## Features
 
-- **Parallel fetching** for multiple dates
-- **Configurable** states, date range, concurrency, retry logic via `.jeff`
-- **Rate-limiting** to avoid API overload
+- **Parallel fetching** for multiple dates  
+- **Configurable** states, date range, concurrency, retry logic via `.jeff`  
+- **Rate-limiting** to avoid API overload  
 - **CSV export** (default) with:
   - Search date
   - Location data (ID, name, phone, etc.)
@@ -67,7 +67,7 @@ Create a `.jeff` file in your project root. Example:
 - **`fetch_interval_minutes`**  
   - `0` → Run once and exit  
   - `> 0` → Repeatedly fetch every N minutes  
-- **`search_states`**: 2-letter codes for states you want to filter  
+- **`search_states`**: 2-letter codes for states to filter  
 - **`date_range`**: Start/end in `YYYY-MM-DD`  
 - **`api_rate_limit_seconds`**: Delay between requests  
 - **`max_concurrent_fetches`** and **`max_retries`**
@@ -118,7 +118,7 @@ flowchart TB
     G --> H[Filter by States]
     H --> I[Convert to CSV Rows / Slack Data]
     I --> J{enable_slack?}
-    J -- "No" --> K[Write to CSV (includes raw JSON)]
+    J -- "No" --> K[Write to CSV \(includes raw JSON\)]
     J -- "Yes" --> L[Post Slack Summary]
     K --> M[End or Sleep]
     L --> M[End or Sleep]
@@ -127,9 +127,9 @@ flowchart TB
     M -- "Once" --> O[Stop]
 ```
 
-- **A→B→C→D**: Reads config, sets up HTTP/Slack.  
-- **E/F**: Single run vs loop.  
-- **G→H**: Fetch & filter.  
-- **H→I**: Prepare CSV or Slack.  
-- **J** → Slack or CSV.  
-- **M** → End or sleep for the next cycle.  
+- **A→B→C→D**: Reads config, sets up HTTP/Slack  
+- **E/F**: Single run vs loop  
+- **G→H**: Fetch & filter  
+- **H→I**: Prepare CSV or Slack  
+- **J** → Slack or CSV  
+- **M** → End or sleep for next cycle 
