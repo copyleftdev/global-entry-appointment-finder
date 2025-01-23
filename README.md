@@ -118,7 +118,7 @@ flowchart TB
     G --> H[Filter by States]
     H --> I[Convert to CSV Rows / Slack Data]
     I --> J{enable_slack?}
-    J -- "No" --> K[Write to CSV \(includes raw JSON\)]
+    J -- "No" --> K[Write to CSV &#40;includes raw JSON&#41;]
     J -- "Yes" --> L[Post Slack Summary]
     K --> M[End or Sleep]
     L --> M[End or Sleep]
@@ -127,9 +127,9 @@ flowchart TB
     M -- "Once" --> O[Stop]
 ```
 
-- **A→B→C→D**: Reads config, sets up HTTP/Slack  
-- **E/F**: Single run vs loop  
-- **G→H**: Fetch & filter  
-- **H→I**: Prepare CSV or Slack  
-- **J** → Slack or CSV  
-- **M** → End or sleep for next cycle 
+- **A→B→C→D**: Reads config, sets up HTTP/Slack.  
+- **E/F**: Single run vs loop.  
+- **G→H**: Fetch & filter.  
+- **H→I**: Prepare CSV or Slack.  
+- **J** → Slack or CSV.  
+- **M** → End or sleep for next cycle.  
