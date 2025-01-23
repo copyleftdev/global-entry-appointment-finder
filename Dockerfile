@@ -45,4 +45,3 @@
     COPY .jeff ./.jeff
     
     CMD ["global-entry-app"]
-    
